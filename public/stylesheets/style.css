@@ -1,26 +1,69 @@
-body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif; 
 }
 
-a {
-  color: #00B7FF;
+body{
+  height: 100vh;
+  background: linear-gradient( #000000 10% )
+
 }
 
 #gameControls {
-  display: flex;
+  #display: grid;
   width: 100%;
   height: 100px;
-  background: #ccc;
+  background: #997e81;
 }
+
+.scoreboard {
+  background-color: #aa3492;
+  width: min(90%, 34em);
+  position: absolute;
+  #transform: translate( -50%, -50%);
+  transform: translate( -50%, 0%);
+  left: 50%;
+  #top: 50%;
+  padding:1em;
+  border-radius: 0.5em;
+  display: grid;
+  grid-template-columns: 2fr 1fr 2fr;
+  align-items: center;
+}
+.game-options {
+  display: grid;
+  background: #997e81;
+}
+
+.team {
+  text-align: center;
+  background-color: #353638;
+  padding: 0.7em;
+  border-radius: 0.25em;
+}
+
 #homescore,#awayscore {
   border: black;
 }
 
+.facade {
+  display: grid;
+  grid-template-columns: [homescores] 10% [dartboard] auto [awayscores] 10% ;
+  background: #008899;
+}
+
+#leftboard,#rightboard {
+  background: #000;
+}
+
+
 #svgContainer {
-  display: flex;
+  /*display: flex;
   align-items: center;
-  justify-content: center;
+ justify-content: center; */
+text-align:center;
   background: #008899;
 }
 
@@ -28,4 +71,7 @@ a {
   background: #9944ee;
   width: 90%;
 }
+
+
+
 
