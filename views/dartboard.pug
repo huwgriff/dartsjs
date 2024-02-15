@@ -1,0 +1,304 @@
+doctype html
+html
+  head
+    title=title
+    meta(charset="utf-8")
+    meta(name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width")
+
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src="https://d3js.org/d3.v6.min.js")
+    script(src="dartboard.js" )
+    //script(src="dartsgui.js" )
+    
+    header#gameControls
+      div.scoreboard
+        div.team
+          h1.homename Home
+          p#homescore
+        div.game-select
+          select(id="game-seletor" name="game-selector")
+            option(value=1) 301
+            option(value=2) 401
+            option(value=3) 501
+            option(value=4) 601
+            option(value=5) 701
+            option(value=6) 801
+            option(value=7) 901
+            option(value=8) 1001
+        div.team
+          h1.awayname Away
+          p#awayscore
+    body
+      div#svgContainer
+
+
+    block content
+
+    script(type='text/javascript').
+
+      window.onload=function()
+      {
+
+        var svg = d3.select("#svgContainer")
+         .append("svg")
+         .attr("preserveAspectRatio", "xMinYMin meet")
+     //.attr("viewBox", "0 0 960 500")
+     //.attr("style", "outline: thick solid blue;")
+         .attr("width", window.innerWidth)
+     //.attr("width", 900)
+         .attr("height", window.innerHeight);
+
+        let sf = 1.2;
+
+        let board = new Board(sf)
+
+        createBoard(board)
+
+      }
+
+      function createBoard(board)
+      {
+      
+        let radius = (board.getDoubleOuter() + board.getBorder() );
+      
+        let cx = 350;
+        let cy = 300;
+      
+        board.setOrigin(cx,cy)
+      
+        console.log("drawBoard")
+        console.log("Radius " + radius )
+      
+        let svg = d3.select('svg')
+      
+        svg.append("g")
+      
+        // Draw board background
+        // svg.append("circle")
+
+        d3.select('g').append("circle")
+                  .attr("cx", cx)
+                  .attr("cy", cy)
+                  .attr("r", radius)
+                  .attr("fill", board.dartsBlack )
+
+        console.log("Board " + board )
+            
+        let board_sectors = board.getSectors();
+            
+        for( const sector of board_sectors )  {
+            
+          console.log('NUMBER IS  : ' + Object.keys(sector)[0] )
+            
+          drawSector(cx,cy,sector,board)
+        }
+            
+        drawTwentyFive(cx,cy,board)
+            
+        drawBull(cx,cy,board)
+            
+        svg.on("click", function() {
+          var x = board.dartInBoard( d3.pointer(event)[0], d3.pointer(event)[1]);
+          setScore(x)
+            
+        })
+            
+      }
+      
+      function drawSector(cx,cy,sector,board)
+      {
+      
+         //Draw double
+         drawDouble(cx,cy,sector,board);
+      
+      
+         //Draw big number (if white)
+      
+         drawBigNumber(cx,cy,sector,board);
+      
+      
+         //Draw treble
+         drawTreble(cx,cy,sector,board);
+      
+         //Draw small number (if white)
+      
+         drawSmallNumber(cx,cy,sector,board);
+      
+      /*
+         drawNumber(cx,cy,sector);
+      */
+      
+      }
+      
+      function drawDouble(cx,cy,sector,board)
+      {
+      
+        console.log('DrawDouble  ' + Object.keys(sector)[0] + ' : '  + sector[Object.keys(sector)[0]][0] + ' ( ' + sector[Object.keys(sector)[0]][0]*(180/Math.PI) + ')' + ' : '  + sector[Object.keys(sector)[0]][1] + ' ( ' + sector[Object.keys(sector)[0]][1]*(180/Math.PI) + ')')
+      
+        let svg = d3.select('svg')
+      
+        var arc = d3.arc()
+            .innerRadius(board.getDoubleInner())
+            .outerRadius(board.getDoubleOuter())
+            .startAngle(  sector[Object.keys(sector)[0]][0])
+            .endAngle( sector[Object.keys(sector)[0]][1] )
+      
+        console.log( "White " + board.WHITE + " Black " + board.BLACK )
+        console.log( "col = " +sector[Object.keys(sector)[0]][2] );
+      
+        if(sector[Object.keys(sector)[0]][2] == board.WHITE) {
+          svg.append("path")
+            .attr("class", "arc")
+            .attr("d", arc)
+            .attr("fill", board.dartsGreen )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+                      .attr("stroke", board.dartsWire )
+                      .attr("stroke-width", board.wireWidth );
+        } else {
+          svg.append("path")
+            .attr("class", "arc")
+            .attr("d", arc)
+            .attr("fill", board.dartsRed )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+                      .attr("stroke", board.dartsWire )
+                      .attr("stroke-width",  board.wireWidth );
+        }
+      
+        return;
+      
+      }
+
+      function drawTreble(cx,cy,sector,board)
+      {
+      
+        let svg = d3.select('svg')
+      
+        var arc = d3.arc() 
+            .innerRadius(board.getTrebleInner())
+            .outerRadius(board.getTrebleOuter()) 
+            .startAngle(  sector[Object.keys(sector)[0]][0])
+            .endAngle( sector[Object.keys(sector)[0]][1] )
+      
+        if(sector[Object.keys(sector)[0]][2] == board.WHITE) {
+          svg.append("path") 
+            .attr("class", "arc")
+            .attr("d", arc) 
+            .attr("fill", board.dartsGreen )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth ) 
+            .attr("id", "N" + Object.keys(sector)[0] ) //Unique id of the path
+        } else {
+          svg.append("path") 
+            .attr("class", "arc")
+            .attr("d", arc) 
+            .attr("fill", board.dartsRed )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth ) 
+            .attr("id", "N" + Object.keys(sector)[0] ) //Unique id of the path
+        }
+      }
+
+      function drawBigNumber(cx,cy,sector,board)
+      {
+      
+        let svg = d3.select('svg')
+      
+        var arc = d3.arc()
+            .innerRadius(board.getTrebleOuter())
+            .outerRadius(board.getDoubleInner())
+            .startAngle(  sector[Object.keys(sector)[0]][0])
+            .endAngle( sector[Object.keys(sector)[0]][1] )
+      
+      
+        if(sector[Object.keys(sector)[0]][2] == board.WHITE) { 
+          svg.append("path")
+            .attr("class", "arc")
+            .attr("d", arc)
+            .attr("fill", board.dartsWhite )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth );
+        } else {
+          svg.append("path")
+            .attr("class", "arc")
+            .attr("d", arc)
+            .attr("fill", board.dartsBlack )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth );
+        }
+      
+      }
+      function drawSmallNumber(cx,cy,sector,board)
+      {
+      
+        let svg = d3.select('svg')
+      
+        var arc = d3.arc()
+            .innerRadius(board.getTwentyFiveOuter())
+            .outerRadius(board.getTrebleInner())
+            .startAngle(  sector[Object.keys(sector)[0]][0])
+            .endAngle( sector[Object.keys(sector)[0]][1] )
+      
+      
+        if(sector[Object.keys(sector)[0]][2] == board.WHITE) { 
+          svg.append("path")
+            .attr("class", "arc")
+            .attr("d", arc)
+            .attr("fill", board.dartsWhite )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth );
+        } else {
+          svg.append("path")
+            .attr("class", "arc")
+            .attr("d", arc)
+            .attr("fill", board.dartsBlack )
+            .attr('transform', 'translate(' + cx + ',' +cy+')')
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth );
+        }
+      
+      }
+
+
+      function drawTwentyFive(cx,cy,board)
+      {
+      
+          let svg = d3.select('svg')
+            .append("circle")
+            .attr("cx", cx)
+            .attr("cy", cy)
+            .attr("r", board.getTwentyFiveOuter())
+            .attr("fill", board.dartsGreen) 
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth );
+      }
+      
+      function drawBull(cx,cy,board)
+      {
+      
+          console.log("Draw BUll " + board.getBullOuter() )
+      
+          let svg = d3.select('svg')
+            .append("circle")
+            .attr("cx", cx)
+            .attr("cy", cy)
+            .attr("r", board.getBullOuter())
+            .attr("fill", board.dartsRed)
+            .attr("stroke", board.dartsWire )
+            .attr("stroke-width",  board.wireWidth );
+      }
+
+      function setScore(x) {
+
+          console.log( "You got "+ x );
+
+          // team = getCurrentPlayer()
+      }
+
+
+
+
