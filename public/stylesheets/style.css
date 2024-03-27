@@ -20,7 +20,7 @@ body{
 
 .scoreboard {
   background-color: #aa3492;
-  width: min(90%, 34em);
+  width: min(80%, 30em);
   position: absolute;
   #transform: translate( -50%, -50%);
   transform: translate( -50%, 0%);
@@ -32,9 +32,14 @@ body{
   grid-template-columns: 2fr 1fr 2fr;
   align-items: center;
 }
+
 .game-options {
+  font-size: 10px;
   display: grid;
   background: #997e81;
+}
+.game-options > option {
+  font-size: 10px;
 }
 
 .team {
@@ -44,18 +49,107 @@ body{
   border-radius: 0.25em;
 }
 
+.throwdisplay {
+  height: 13px;
+  margin-bottom: 0.5rem;
+}
+
+
+.throw_indicator {
+
+  border: 1px solid grey;
+  border-radius: 50%;
+  width: 0.8rem;
+  height: 0.8rem;
+  margin: auto;
+  /* color: yellow !important;*/
+
+}
+
+.hasthrow {
+  background-color: #FF3131;
+}
+
+.nothrow {
+  background-color: transparent;
+}
+
+.teamname {
+  color: white;
+}
+
+#homelegs,#awaylegs {
+
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  height: 10px;
+  border: 1px solid #444;
+  margin-bottom: 0.5rem;
+}
+
 #homescore,#awayscore {
   border: black;
+  color: yellow;
+}
+
+div.leg {
+  border: 1px solid #444;
+  /*background: grey;*/
+  background: #333;
+}
+
+div.legwon {
+  background: #a22;
 }
 
 .facade {
   display: grid;
-  grid-template-columns: [homescores] 10% [dartboard] auto [awayscores] 10% ;
+  grid-template-columns: [homescores] 15% [dartboard] auto [awayscores] 15% ;
   background: #008899;
 }
 
 #leftboard,#rightboard {
   background: #000;
+  color: white;
+  width: 100%;
+}
+
+.tally {
+  display: grid;
+  width: 100%;
+  grid-auto-rows: 1fr;
+  /* 
+   grid-auto-flow: rows;
+   height: 50%; */
+  background: #aaa;
+  
+}
+
+.tallyrow {
+  display: grid;
+  /* grid-template-columns: repeat(3, 33% [col-start]); */
+  /* fourth columns to show total */
+  grid-template-columns: repeat(4, 25% [col-start]);
+  border 1px solid red;
+  /*height: 15px;   ????????? */
+  width: 100%;
+  color: white;
+  background: black;
+  /* font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif; */
+  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-family: "TSCU_Comic", "Comic Sans", cursive;
+}
+
+.tallyrow > div {
+  border: 1px solid white;
+  color: white;
+  text-align: center;
+}
+
+.tallyrow >div:last-child {
+  border: 1px solid red;
+  color: red;
 }
 
 

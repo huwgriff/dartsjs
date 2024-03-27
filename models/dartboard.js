@@ -1,19 +1,6 @@
 class Board {
 
-/***
-BULLSEYE = 1;
-const TWENTYFIVE = 2;
-const SMALL_SECTOR = 3;
-const TREBLE = 4;
-const BIG_SECTOR = 5;
-const DOUBLE = 6;
-const MISS = 7;
-const ERROR = 8;
-
-const BLACK = 1;
-const WHITE = 2;
-*/
-
+/**
 Sectors = {
 
   BULLSEYE : 1,
@@ -25,17 +12,10 @@ Sectors = {
   MISS : 7,
   ERROR : 8
 }
-
-//BLACK = 1;
-//WHITE = 2;
+**/
 
 
-
-  sf = 1.5;
-
-
-
-  constructor(sf) {
+  constructor(sf=1.5) {
 
 
     this.BLACK = 1;
@@ -127,71 +107,54 @@ Sectors = {
 
   dartInBoard(eventx,eventy) {
 
-
     var x = eventx - this.x_origin;
     var y = (eventy - this.y_origin) * -1;
 
-    console.log(" Dart in board x,y = " + x + ', ' +y)
+    //console.log(" Dart in board x,y = " + x + ', ' +y)
 
     var radial = Math.sqrt(x*x +  y*y);
 
-    console.log(" sqrt " + x + ', ' +y + ' = ' + radial )
+    //console.log(" sqrt " + x + ', ' +y + ' = ' + radial )
 
     //var angle_radians = Math.atan2( y,x );
     var angle_radians = Math.atan2( x, y );
-
 
     if(angle_radians < 0) { 
       angle_radians +=  (Math.PI*2);
     }
 
     // console.log("Distance from centre " + radial )
-
-    console.log("Angle from YAxis rads: " + angle_radians + " degrees: " + ( angle_radians * (180/ Math.PI)) )
-
+    //console.log("Angle from YAxis rads: " + angle_radians + " degrees: " + ( angle_radians * (180/ Math.PI)) )
 
     var poc = this.pointOnCircle(angle_radians, radial)
 
-    console.log(" Point on Circle x, y " + poc.x + ', ' +poc.y );
+    //console.log(" Point on Circle x, y " + poc.x + ', ' +poc.y );
 
     var sector = this.whichPie(angle_radians)
-
-    var number = Object.keys(sector)[0]
-
-    console.log("Nnumber " + number);
-
     var ring = this.whichRing( radial );
+    var number,score;
+
+
+    if( ring == this.MISS ) { 
+      number = 0; score = 0;
+    } else if( ring == this.TWENTYFIVE ) { 
+      number = 25; score = 25;
+    } else if( ring == this.BULLSEYE ) { 
+      number = 50; score = 50;
+    } else if( ring == this.DOUBLE ) { 
+      number = Object.keys(sector)[0]
+      score =  number * 2;
+    } else if( ring == this.TREBLE ) { 
+      number = Object.keys(sector)[0]
+      score =  number * 3;
+    } else { 
+      number = Object.keys(sector)[0]
+      score =  number;
+    }
 
  //   highlight_contact(sector, ring );
 
-    if( ring == this.MISS ) {
-      console.log( "You missed you tosser\n " );
-      return 0;
-    } else if ( ring == this.DOUBLE )
-    {
-      console.log( "** You hit double %d\n ",number );
-      return 2 * number;
-    } else if ( ring == this.BIG_SECTOR )
-    {
-      console.log( "> You hit big %d\n ",number );
-      return number;
-    } else if ( ring == this.TREBLE )
-    {
-      console.log( "*** You hit treble %d\n ",number );
-      return 3 * number;
-    } else if ( ring == this.SMALL_SECTOR )
-    {
-      console.log( "< You hit small %d\n ",number );
-      return number;
-    } else if ( ring == this.TWENTYFIVE )
-    {
-      console.log( "! You hit a 25 \n " );
-      return 25;
-    } else if ( ring == this.BULLSEYE )
-    {
-      console.log( "!!!You can't beat a bit of BULLY! \n " );
-      return 50;
-    }
+    return ( { "ring": ring, "number" : number, "score" : score } );
 
   }
 
