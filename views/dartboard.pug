@@ -8,6 +8,7 @@ html
     link(rel='stylesheet', href='/stylesheets/style.css')
     script(src="https://d3js.org/d3.v6.min.js")
     script(src="dartboard.js" )
+    script(src="scoreboard.js" )
     script(src="dartsgame.js" )
     
     header#gameControls
@@ -19,6 +20,7 @@ html
           div#homelegs
           h2.teamname#homename Home
           p#homescore 0
+          p#homeremaining 
         div.game-options
 
           div.game-select
@@ -58,6 +60,7 @@ html
           div#awaylegs
           h2.teamname#awayname Away
           p#awayscore 0
+          p#awayremaining 
     body
       div.facade
         div#leftboard.marker
@@ -74,10 +77,15 @@ html
 
       //localStorage.setItem('Current Game', DartsGame  );
 
+      DEBUG = 1;
+
       window.onload=function()
       {
 
-        /* Create Game selector dropdown */
+        /* 
+         * Create Game selector dropdown
+        */
+
         var selector = document.getElementById("game-selector");
         for( const game of Object.entries(DartsGame.straight_games) )  {
 
@@ -85,194 +93,192 @@ html
 
         }
 
-        /* Create "Best of" selector dropdown */
+        /* 
+         * Create "Best of" selector dropdown 
+        */
+        // OPTIONS
 
         selector = document.getElementById("bestof-selector");
 
         var nlegs=1;
 
         for( const b of DartsGame.bestof )  {
+
           selector.options[selector.options.length] = new Option(b, nlegs++);
+
         }
 
+        /*
+         * Create the SVG conatiner for the dartboard
+        */
 
         var svg = d3.select("#svgContainer")
          .append("svg")
          //.attr("preserveAspectRatio", "xMinYMin meet")
-     //.attr("viewBox", "0 0 960 500")
-     //.attr("style", "outline: thick solid blue;")
+         //.attr("viewBox", "0 0 960 500")
+         //.attr("style", "outline: thick solid blue;")
          //.attr("width", window.innerWidth)
          .attr("width", "100%")
-     //.attr("width", 900)
+         //.attr("width", 900)
          .attr("height", window.innerHeight);
          //.attr("height", "100%")
 
         let sf = 1.2;
 
-        //let board = new Board(sf)
+        /*
+         * Create the Dart board
+        */
 
         window.board = new Board(sf)
 
+
         createBoard(window.board)
 
+        /*
+         * Create the score boards board
+        */
+
+        window.scoreboard = new ScoreBoard()
+
+        /*
+         * Initialise the Options GUI ?
+        */
+
+        // OPTIONS
         d3.select('#game-selector').on("change", function() {
 
-          //var x = d3.select("#game-selector").node.value;
           var x = d3.select("#game-selector").property("value");
 
-          console.log("Changed game!" + x);
+          debug("Changed game to: " + x  );
 
         })
 
         d3.select("#reset").on("click", function() {
 
+          debug("Clicked Reset " );
         })
+
+        // OPTIONS
 
         d3.select("#newgame").on("click", function() {
 
-           /* this stuff to go in function */
+          debug("Clicked New Game " );
 
-           /* 
-            new game means:
-              *  get game type (301, etc) from game-selector selector)
-              *  get best of (3,5,etc) from bestof-selector selector)
-              *  get double in option from doublein checkbox (normally 301 only)
-              *  set game in play
-              *  set team to throw first - default to home team ?
-              *  ( might need to add a checkbox if it's double in 
-              )
-              *  maybe get double out option from doublein checkbox (only for noobs)
-              *
-           */
-           //sessionStorage["currentGame"] = ""
+          /*
+           * Have clicked on 'New Game'
+          */
 
-           /* before new match get current options */
+          /* this stuff to go in function */
 
-           var first_leg_start = "home";  // Assume home throws first leg - but could be bull so make variable.
-
-           var gs = document.getElementById("game-selector");
-           var gametype = gs.options[gs.selectedIndex].text;
-
-           var bs = document.getElementById("bestof-selector");
-           var bestof = parseInt(bs.options[bs.selectedIndex].text);
-
-           var doublein = document.getElementById("doublein").checked;
-
-           console.log( gametype + " bestof " + bestof + " double start ? "+ doublein); 
-
-
-           window.thismatch = {}; /* Place holder until Match class developed */
-
-           window.thismatch.current_game = new DartsGame( { hometeam: "Scoundrels",
-                                            awayteam:"Rotters" ,
-                                            type:  gametype, 
-                                            nlegs: bestof,
-                                            double_in: doublein } );
-
-           console.log( "Newmatch created  " + window.thismatch.current_game )
-
-           /*
-           window.newmatch = new DartsGame( { hometeam: "Scoundrels",
-                                            awayteam:"Rotters" ,
-                                            type:  gametype, 
-                                            nlegs: bestof,
-                                            double_in: doublein } );
-           console.log( "Newmatch created  " + window.newmatch )
+          /* 
+           *  a new game means doing:
+           *  
+           *  a) get game type (301, etc) from game-selector selector)
+           *  b) get best of (3,5,etc) from bestof-selector selector)
+           *  c) get double in option from doublein checkbox (normally 301 only)
+           *  d) Create Game 
+           *  e) set team to throw first - default to home team ?
+           *  f) Set game 'in play'
+           *  
+           *  maybe get double out option from doublein checkbox (only for noobs)
+           *
            */
 
+          //sessionStorage["currentGame"] = ""
 
-           /* New Game - set In Play */
-           //window.newmatch.setInPlay(1);
 
-           window.thismatch.current_game.setInPlay(1);
+          /*
+           *  a) get game type (301, etc) from game-selector selector
+           */
+
+          var gs = document.getElementById("game-selector");
+          var gametype = gs.options[gs.selectedIndex].text;
+
+
+          /*
+           *  b) get best of (3,5,etc) from bestof-selector selector
+           */
+
+          var bs = document.getElementById("bestof-selector");
+          var bestof = parseInt(bs.options[bs.selectedIndex].text);
+
+          /*
+           *  c) get double in option from doublein checkbox 
+           */
+
+          var doublein = document.getElementById("doublein").checked;
+
+
+          debug( gametype + " bestof " + bestof + " double start ? "+ doublein); 
+
+
+          /*
+           *  d) Create game
+           */
+        
+          window.thismatch = {}; /* Place holder until Match class developed */
+
+          window.thismatch.current_game = new DartsGame( {
+                                           hometeam: "Scoundrels",
+                                           awayteam:"Rotters" ,
+                                           type:  gametype, 
+                                           nlegs: bestof,
+                                           double_in: doublein 
+                                           } );
+
             
-           /* Default Set Throw to Hometeam - can add an option for who goes first  */
+          /*
+           *  e) Set team to throw first - default to home team ?
+           *     could be bull start so need to make variable.
+           */
 
-           window.thismatch.current_game.setGotThrow(first_leg_start);
+          var first_leg_start = "home";  
 
-           document.querySelector (".team#"+first_leg_start+ " .throw_indicator").classList.add("hasthrow");
+          window.thismatch.current_game.setGotThrow(first_leg_start);
 
+          debug( "First throw  "+ first_leg_start); 
 
-           console.log("New Game " +  JSON.stringify(window.thismatch.current_game) );
-
-           /* Team names - will have already been filled in ? */
-
-           d3.select("#homename").text(window.thismatch.current_game.hometeam.teamname);
-           d3.select("#awayname").text(window.thismatch.current_game.awayteam.teamname);
-
-           d3.select("#homescore").text(gametype);
-           d3.select("#awayscore").text(gametype);
-           //d3.select('h2').style('color', 'blue');
+          /*
+           *  f) Set game in play
+          */
+          window.thismatch.current_game.setInPlay(1);
 
 
+          /**********************
+           ** SCOREBOARD STUFF **
+          ***********************/
 
-           sideBoardsDisplay();
+          /* 
+           * Initialise scoreboard 
+          */
 
-           /* Setup the leg count display */
+          window.scoreboard.init(first_leg_start)
 
-           legCountDisplay();
+          debug("New Game " +  JSON.stringify(window.thismatch.current_game) );
+
+          /* Team names - will have already been filled in ? */
+
+          /* 
+           * Display team/player names
+          */
+
+          d3.select("#homename").text(window.thismatch.current_game.hometeam.teamname);
+          d3.select("#awayname").text(window.thismatch.current_game.awayteam.teamname);
+
+          /* 
+           * Init display team/player starting score
+          */
+          d3.select("#homescore").text(gametype);
+          d3.select("#awayscore").text(gametype);
+          d3.select("#homeremaining").text("("+gametype+")");
+          d3.select("#awayremaining").text("("+gametype+")");
+          //d3.select('h2').style('color', 'blue');
 
 
-           console.log( JSON.stringify(window.thismatch) );
         })
 
       }
       
-      function sideBoardsDisplay() {
-
-           console.log("Trace " + arguments.callee.name );
-
-           /* Clear side scoreboards */
-           var first_leg_start = window.thismatch.current_game.getGotThrow();
-           var hometally = document.getElementById("hometally");
-           hometally.innerHTML = "";
-           var awaytally = document.getElementById("awaytally");
-           awaytally.innerHTML = "";
-
-           /* add first scoring row to whoever's off first */
-           var newrow = document.createElement("div");
-           newrow.classList.add("tallyrow");
-
-           if(first_leg_start == "home") { 
-             hometally.appendChild( newrow );
-           } else {
-             awaytally.appendChild( newrow ); 
-           }
-
-      }
-
-      function legCountDisplay() {
-    
-        console.log("Trace " + arguments.callee.name );
-
-      /* Setup the leg count display */
-
-           var bs = document.getElementById("bestof-selector");
-           var bestof = parseInt(bs.options[bs.selectedIndex].text);
-           var homelegs = document.getElementById("homelegs");
-           var awaylegs = document.getElementById("awaylegs");
-           homelegs.textContent  = '';
-           awaylegs.textContent  = '';
-           var legs_required = (bestof+1)/2;
-           
-           for (let i = 0; i < (bestof+1)/2; i += 1) {
-
-             var hDiv = document.createElement('div'),
-                 aDiv = document.createElement('div');
-             hDiv.className = 'leg';
-             aDiv.className = 'leg';
-             hDiv.id = 'homeleg'+(i+1);
-             aDiv.id = 'awayleg'+(i+1);
-             homelegs.appendChild(hDiv);
-             awaylegs.appendChild(aDiv);
-
-           };
-
-           homelegs.style.gridTemplateColumns  = 'repeat('+legs_required+', 1fr)';
-           awaylegs.style.gridTemplateColumns  = 'repeat('+legs_required+', 1fr)';
-
-      }
-
       function createBoard(board)
       {
       
@@ -316,83 +322,22 @@ html
             
         drawBull(cx,cy,board)
             
-        //document.getElementById("svg").onclick = function() { dartThrown(event) };
+        svg.on("click", function() { 
+          window.thismatch.current_game.processThrow(event);
+        });
 
-        svg.on("click", function() { dartThrown(event)});
-
-        /********
-        svg.on("click", function() {
-
-
-         
-          //setScore(x)
-            
-        })
-        ********/
             
       }
       
-      function dartThrown(event){
-
-         /* Dart has been thrown at board */
-         
-        console.log("Trace " + arguments.callee.name );
-
-          var board = window.board;
-          var res = board.dartInBoard( d3.pointer(event)[0], d3.pointer(event)[1]);
-          var ring = res.ring;
-          var number = res.number;
-          var score = res.score;
-
-          console.log(" Dart thrown in ring : " + res.ring );
-          console.log(" Dart thrown number sector : " + res.number );
-
-          /* Replace console.log with board highlight */
-
-          if( ring == board.MISS ) {
-          } else if ( ring == board.DOUBLE )
-          {
-            console.log( "** You hit double %d\n ",res.number );
-          } else if ( ring == board.BIG_SECTOR )
-          {
-            console.log( "> You hit big %d\n ",res.number );
-          } else if ( ring == board.TREBLE )
-          {
-            console.log( "*** You hit treble %d\n ",res.number );
-          } else if ( ring == board.SMALL_SECTOR )
-          {
-            console.log( "< You hit small %d\n ",res.number );
-          } else if ( ring == board.TWENTYFIVE )
-          {
-            console.log( "! You hit a 25 \n " );
-          } else if ( ring == board.BULLSEYE )
-          {
-            console.log( "!!!You can't beat a bit of BULLY! \n " );
-          }
-
-
-        if( ! ("thismatch" in window) ) {   // thismatch.current_game ??
-
-          console.log( "Start a newmatch ");
-          return;
-        } 
-
-        //window.newmatch.processScore({"sector": ring, "number": number, "score": score});
-
-        window.thismatch.current_game.processScore({"sector": ring, "number": number, "score": score});
-      }
-
       function drawSector(cx,cy,sector,board)
       {
       
          //Draw double
          drawDouble(cx,cy,sector,board);
       
-      
          //Draw big number (if white)
       
          drawBigNumber(cx,cy,sector,board);
-      
       
          //Draw treble
          drawTreble(cx,cy,sector,board);
@@ -401,16 +346,11 @@ html
       
          drawSmallNumber(cx,cy,sector,board);
       
-      /*
-         drawNumber(cx,cy,sector);
-      */
-      
       }
       
       function drawDouble(cx,cy,sector,board)
       {
       
-        //console.log('DrawDouble  ' + Object.keys(sector)[0] + ' : '  + sector[Object.keys(sector)[0]][0] + ' ( ' + sector[Object.keys(sector)[0]][0]*(180/Math.PI) + ')' + ' : '  + sector[Object.keys(sector)[0]][1] + ' ( ' + sector[Object.keys(sector)[0]][1]*(180/Math.PI) + ')')
       
         let svg = d3.select('svg')
       
@@ -419,9 +359,6 @@ html
             .outerRadius(board.getDoubleOuter())
             .startAngle(  sector[Object.keys(sector)[0]][0])
             .endAngle( sector[Object.keys(sector)[0]][1] )
-      
-        ////console.log( "White " + board.WHITE + " Black " + board.BLACK )
-        //console.log( "col = " +sector[Object.keys(sector)[0]][2] );
       
         if(sector[Object.keys(sector)[0]][2] == board.WHITE) {
           svg.append("path")
@@ -537,9 +474,7 @@ html
             .attr("stroke", board.dartsWire )
             .attr("stroke-width",  board.wireWidth );
         }
-      
       }
-
 
       function drawTwentyFive(cx,cy,board)
       {
@@ -569,74 +504,11 @@ html
             .attr("stroke-width",  board.wireWidth );
       }
 
-
-      function setNextPlayer() {
-
-        var got_throw = window.thismatch.current_game.getGotThrow();
-
-        var ht = document.querySelector('.team#home  .throw_indicator' )
-        var at = document.querySelector('.team#away  .throw_indicator' )
-
-        var tally = document.getElementById(got_throw+ "tally" );
-        var newrow = document.createElement("div");
-
-        newrow.classList.add("tallyrow");
-        tally.appendChild( newrow );
-
-
-        if(got_throw == "home" ) {
-
-           ht.classList.add("hasthrow");
-           at.classList.remove("hasthrow");
-
-        } else {
-
-           at.classList.add("hasthrow");
-           ht.classList.remove("hasthrow");
-
-        }
+      function debug(s) {
+        if(DEBUG) {
+            console.log("dbg: " + s);
+          }
       }
 
-      function displayLegWon(dartthrow, leg_number ) 
-      {
-        //var got_throw = window.newmatch.getGotThrow();
-        var got_throw = window.thismatch.current_game.getGotThrow();
 
-        console.log ("displayLegWon " + got_throw );
-        console.log ("displayLegWon nleg  " + leg_number );
-        console.log ("gETID   " + got_throw+"leg"+leg_number );
-
-        var ldiv = document.getElementById(got_throw+"leg"+leg_number);
-        ldiv.classList.add("legwon");
-
-      }
-
-      function displayDartThrown(dartthrow) 
-      {
-        var index = dartthrow.index;
-        //var got_throw = window.newmatch.getGotThrow();
-        var got_throw = window.thismatch.current_game.getGotThrow();
-
-        console.log ("dartthrow.scores.dart"+index+".score" );
-
-        var score = eval ("dartthrow.scores.dart"+index+".score" );
-
-        var tally = document.getElementById(got_throw+ "tally" );
-        var tallyrow = document.getElementById(got_throw+ "tally" ).lastChild;
-        var iDiv = document.createElement('div');
-
-        if(parseInt(score) == 0) { score = "-"; }
-
-        iDiv.innerHTML = score;
-        tallyrow.appendChild(iDiv);
-
-        if(index == 3) { 
-         /* update total (of 3 darts) field */
-       
-          iDiv = document.createElement('div');
-          iDiv.innerHTML = window.thismatch.current_game.getTotal();
-          tallyrow.appendChild(iDiv);
-        }
-
-      }
-
+ 

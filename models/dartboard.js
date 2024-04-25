@@ -1,22 +1,6 @@
 class Board {
 
-/**
-Sectors = {
-
-  BULLSEYE : 1,
-  TWENTYFIVE : 2,
-  SMALL_SECTOR : 3,
-  TREBLE : 4,
-  BIG_SECTOR : 5,
-  DOUBLE : 6,
-  MISS : 7,
-  ERROR : 8
-}
-**/
-
-
   constructor(sf=1.5) {
-
 
     this.BLACK = 1;
     this.WHITE = 2;
@@ -28,6 +12,9 @@ Sectors = {
     this.DOUBLE = 6,
     this.MISS = 7,
     this.ERROR = 8
+
+    this.DEBUG = 1;
+
 
     this.standard_sectors_rad = [
 
@@ -80,13 +67,12 @@ Sectors = {
     this.dartsWhite = "rgb(249,223,188, 255)"  //Darts Whitish
     this.dartsWire = "rgb(165,169,180, 255)"  //Darts wire
     this.wireWidth = 1
-    //this.BLACK  = 1;
-    //this.WHITE = 2;
-
-
-
 
   }
+
+  /* 
+   * Class Functions
+  */
 
   getScaleFactor() { return this.scale_factor; }
   getDoubleOuter() { return this.double_outer; }
@@ -104,8 +90,25 @@ Sectors = {
 
   getSectors() { return this.standard_sectors_rad; }
 
+  debug(s) {
+    if(this.DEBUG) {
+        console.log("dbg: " + s);
+      }
+  }
+
 
   dartInBoard(eventx,eventy) {
+
+    /*
+     * Translate an x,y coordinate into a dart specific object
+     * returns the ring (annulus sector), the number (sector or slice), and the score (from previous two inputs)
+     *
+     * e.g. 
+     * return ( { "ring": ring, "number" : number, "score" : score } );
+     *
+    */
+
+    this.debug( "dartInBoard()" );
 
     var x = eventx - this.x_origin;
     var y = (eventy - this.y_origin) * -1;
@@ -127,8 +130,6 @@ Sectors = {
     //console.log("Angle from YAxis rads: " + angle_radians + " degrees: " + ( angle_radians * (180/ Math.PI)) )
 
     var poc = this.pointOnCircle(angle_radians, radial)
-
-    //console.log(" Point on Circle x, y " + poc.x + ', ' +poc.y );
 
     var sector = this.whichPie(angle_radians)
     var ring = this.whichRing( radial );
@@ -174,7 +175,7 @@ Sectors = {
     var sector;
 
     if( angle_rads > 6.12611 ) {
-     // Its a 20
+      // Its a 20
       return ({ "20": [-0.15708, 0.15708, this.BLACK ] })
 
 
@@ -184,9 +185,6 @@ Sectors = {
 
         var start_rad = sector[Object.keys(sector)[0]][0];
         var end_rad = sector[Object.keys(sector)[0]][1];
-
-        //console.log("Which Pie -sector " + Object.keys(sector)[0] + " ? angle rads " + angle_rads + " Start angle " + start_rad + " End angle " + end_rad +"(" + start_rad*(180/Math.PI) + " : " + end_rad*(180/Math.PI) + ")");
-
 
         if( angle_rads > start_rad && angle_rads < end_rad ) {
 
@@ -285,5 +283,6 @@ struct Sector BoardSectorDefs[NBOARD_SECTORS] = {
 */
 
 }
+
 
 

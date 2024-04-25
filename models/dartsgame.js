@@ -32,6 +32,8 @@ class DartsGame {
              )
   {
 
+    this.DEBUG = 1;
+
     this.hometeam = {
       teamname : hometeam,
       scores : [],
@@ -143,7 +145,7 @@ class DartsGame {
   getTeamLegs(team) { return( eval ( "this."+team+"team.nlegs" ) ); }
   setTeamLegs(team,n) { eval ( "this."+team+"team.nlegs" + " = " + n  ); }
 
-  addTeamLeg(team) { 
+  addTeamLegs(team) { 
 
     //var current_score = eval ( "this."+team+"team.nlegs" ); 
     eval ( "this."+team+"team.nlegs" + "++"  ); 
@@ -154,7 +156,7 @@ class DartsGame {
     return this.current_throw.remaining; 
   }
   setRemaining(total) { 
-    //console.log("Trace " + arguments.callee.name );
+    this.debug("setRemaining : " + total );
     return this.current_throw.remaining = total; 
   }
 
@@ -167,9 +169,9 @@ class DartsGame {
     eval ( "this.current_throw.team" + " = " + teamname  ); 
   }
 
-  getTotal() { return this.current_throw.scores.total; }
+  getTotalThrown() { return this.current_throw.scores.total; }
 
-  setTotal() {
+  setTotalThrown() {
 
     //console.log("Trace " + arguments.callee.name );
     /* need to set total incrementally based on cirumstances - e.g scored but not off etc ? */
@@ -182,23 +184,25 @@ class DartsGame {
 
   setLegOver() {
 
-    console.log("Trace setLegOver()" + JSON.stringify(this.current_throw.team) );
+    this.debug("setLegOver func()");
 
-    //var nlegs = this.getTeamLegs(this.current_throw.team);
-    //nlegs = nlegs + 1;
-    //this.setTeamLegs(this.current_throw.team,nlegs);
+    var nlegs = this.getTeamLegs(this.current_throw.team);
+
+    nlegs = nlegs + 1;
+
+    this.setTeamLegs(this.current_throw.team,nlegs);
 
     /* 
      * Set winner display 
     */
 
     // a) Trad. Mark leg won above teamname 
-    window.displayLegWon(this.current_throw, nlegs);
+    window.scoreboard.displayLegWon(this.current_throw, nlegs);
 
     // b) Clear boards 
 
+    window.scoreboard.clearBoards();
     // c) Reset remaining
-
 
 
     /* 
@@ -206,9 +210,10 @@ class DartsGame {
     */
 
     // a) Increment legs won by winning team.
+
     this.addTeamLegs(this.current_throw.team);
 
-    // b) Reset remaining
+    // b) Reset remaining ??
 
     /*
      * Check if this leg clinched the game.
@@ -217,13 +222,13 @@ class DartsGame {
 
     if( nlegs == lreq ) {
     
-      console.log( "no legs " + nlegs + " Wins the game " );
+      this.debug( "setLegOver() no legs " + nlegs + " Wins the game " );
 
       this.setGameOver();
 
     } else { 
 
-      console.log( "nlegs " + nlegs + " keep going legs req == " + lreq );
+      this.debug.console.log( "setLegOver() nlegs " + nlegs + " keep going legs req == " + lreq );
 
       this.initNextLeg();
 
@@ -233,7 +238,7 @@ class DartsGame {
 
   initNextLeg( ) {
 
-    console.log("Trace initNextLeg() - TODO!");
+    this.debug("initNextLeg func() - TODO!");
     // Reset remaining scores
     console.log("Change current_game " + JSON.stringify(window.thismatch.current_game) );
 
@@ -245,18 +250,20 @@ class DartsGame {
 
   setGameOver() {
 
-    //console.log("Trace " + arguments.callee.name );
+    this.debug( "setGameOver func() - TODO!");
     /*
      * Game is over - are we part of Match?
-    */
-    console.log( "Trace setGameOver() - TODO!");
-    console.log("Change current_game " + JSON.stringify(window.thismatch.current_game) );
 
+    1) Highlight the Winner
+    2) Reset-init everything
+    3) Nothing happens until 'New Game clicked' ?
+    */
 
   }
+
   setBust() {
 
-    console.log("Trace setBust()");
+    this.debug( "setBust func ()");
     console.log("Change current_game " + JSON.stringify(window.thismatch.current_game) );
 
     // Set darts thrown to 0
@@ -274,16 +281,15 @@ class DartsGame {
 
   initNextThrow( ) {
 
-    console.log("Trace initNextThrow() !");
-    console.log("Change current_game " + JSON.stringify(window.thismatch.current_game) );
+    this.debug( "Trace initNextThrow func()");
+
       /* Flip the got throw team */
 
-      //window.newmatch.got_throw = (window.newmatch.got_throw == "home") ? "away" : "home";
       window.thismatch.current_game.got_throw = (window.thismatch.current_game.got_throw == "home") ? "away" : "home";
   
-      console.log("Change display got throw to " + window.thismatch.current_game.getGotThrow() );
+      this.debug("Change display got throw to " + window.thismatch.current_game.getGotThrow() );
 
-      window.setNextPlayer();
+      window.scoreboard.setNextPlayer();
 
       /* INITIALISE current_throw !! */
       //this.initCurrentThrow( window.newmatch.got_throw );
@@ -291,14 +297,14 @@ class DartsGame {
 
   }
 
-  processScore( dartthrow ) {
+  processThrow( event ) {
 
-    //if( ! ("newmatch" in window) ) {
-        //console.log( "Start a newmatch ");
-        //return;
-    //}
+    this.debug("processThrow func()");
 
-    //var current_throw = window.newmatch.current_throw;
+    var dart_thrown = window.board.dartInBoard( d3.pointer(event)[0], d3.pointer(event)[1]);
+
+    this.debug("processThrow: RING: " + dart_thrown.ring + " NUMBER: " + dart_thrown.number + " SCORE: " + dart_thrown.score );
+
     var current_throw = window.thismatch.current_game.current_throw;
     var current_dart = current_throw.index;
     var got_throw = this.getGotThrow();
@@ -315,116 +321,134 @@ class DartsGame {
        tally = "awaytally"; 
     }
 
-
     if ( current_dart == 1 ) {
 
-      /* Get remaining at start of throw */
+     /* 
+      * Store what player has remaining before start throw 
+     */
 
       var remaining = document.getElementById(scoreboard).innerHTML;  
+
+      this.debug("processThrow: current_dart==1, setRemaining("+remaining+")");
       window.thismatch.current_game.setRemaining(remaining)
     }
 
-    /**
-    console.log("CURRENT DART IS " + current_dart );
-    console.log("CURRENT RMAINING IS " + window.thismatch.current_game.getRemaining() );
-    **/
-
     if ( ! started ) {
 
-     // Not off yet 
-
-      console.log( "**** Not Started ****" );
+     /*
+      * Player not yet off  - might need a double
+     */
 
       if ( double_in ) {
 
-        console.log( "**** Need double in ****" );
+        this.debug( "**** Still need double in ****" );
 
-        // It's double in, have we hit a double ? 
+        /* 
+         * It is double in, have we hit a double (or bull) ? 
+        */
 
-        if( dartthrow.sector == window.board.DOUBLE ||
-            dartthrow.sector == window.board.BULLSEYE ) {
+        if( dart_thrown.ring == window.board.DOUBLE ||
+            dart_thrown.ring == window.board.BULLSEYE ) {
 
-          // Yes we hit a double 
-          console.log("Got Double ");
+          /*
+           * Yes we hit a double 
+          */
+
           this.setTeamOff(got_throw); 
 
-          this.setRemaining( this.getRemaining() - dartthrow.score );
+          this.debug("processThrow: current_dart=="+current_dart+" got a double");
 
-          console.log("Temp remaining  " + this.getRemaining());
+          this.setRemaining( this.getRemaining() - dart_thrown.score );
+
+          this.debug("Temp remaining  " + this.getRemaining());
 
 
         } else {
 
           // No double 
-          console.log("Missed Double ");
-          //  Set score to zero to total for round does not include waht we have hit 
-          dartthrow.score = 0;
+          this.debug("Missed Double ");
+          //  Set score to zero to total for round does not include what we have hit 
+          dart_thrown.score = 0;
 
         }
 
       } else {
 
         // Don't need double so set started
+
         this.setTeamOff(got_throw); 
 
         // We cant be bust onfirst dart thrown so subtract score and set remaining 
 
-        this.setRemaining( this.getRemaining() - dartthrow.score );
+        this.setRemaining( this.getRemaining() - dart_thrown.score );
         console.log("Temp remaining  " + this.getRemaining());
 
       }
 
     } else {
 
-      // We are already off
-
-      console.log( "**** Already OFF ****" );
+      /*
+       *  We are already off
+      */
+      this.debug("**** Already OFF ****" );
       
-      /* Dart will either be :
-       * i) less than remaining (including a miss),  !! Legit score !!
-       * ii) more than remaining or		     !! Definite Bust !! 
-       * iii) exact remainder                        !! Double out need to be a double else Bust
+      /* 
+       * Dart will either be:
+       * a) exact remainder - a double normally required.                       
+       * b) less than remaining (including a miss),  !! Legit score !!
+       * c) more than remaining or		     !! Definite Bust !! 
        * - Will probably have option to override double out - for noobs !!
       */
 
 
-      // iii ) Exact remainder case
+      if( this.getRemaining() == dart_thrown.score ) {
 
-      if( this.getRemaining() == dartthrow.score ) {
+        /*
+         *  a) Exact remainder case - Winner if go it with a double
+        */
 
-        // Did we get it with a double?
-        if( dartthrow.sector == window.board.DOUBLE ||
-            dartthrow.sector == window.board.BULLSEYE ) {
+        if( dart_thrown.ring == window.board.DOUBLE ||
+            dart_thrown.ring == window.board.BULLSEYE ) {
 
-          console.log( "Winner - Got remaining with a double" );
+          this.debug( "Winner - Got remaining with a double" );
+
+          //window.scoreboard.highlightWinningThrow(dart_thrown);
 
           this.setRemaining( 0 );
           this.setLegOver()
+          return;
     
 
         } else {
 
-          console.log( "BUST - Got remaining but not double" );
+          this.debug( "BUST - Got remaining but not double" );
           this.setBust()
 
         }
 
       } else {
+   
+        /*
+         * b or c ) Not a winner, so either bust or not. 
+        */
+        if( this.getRemaining() < dart_thrown.score ) {
 
-        this.setRemaining( this.getRemaining() - dartthrow.score ); // ??
-        console.log("Temp remaining  " + this.getRemaining() + " - " + dartthrow.score );      // ??
+          this.debug( "BUST - Got too many" );
+
+        } else {
+
+          this.debug("Temp remaining  " + this.getRemaining() + " - " + dart_thrown.score );      // ??
+          this.debug("Not sure about this in processScore dart no : " + current_dart );
+      
+          this.setRemaining( this.getRemaining() - dart_thrown.score ); // ??
+        }
       }
 
     }
 
-    
+    window.thismatch.current_game.storeThrow(dart_thrown);
 
-    //document.getElementById(scoreboard).innerHTML = newscore;
-    //window.displayDartThrown(dartthrow);
-
-    window.thismatch.current_game.storeThrow(dartthrow);
-
-    window.displayDartThrown(this.current_throw);
+    window.scoreboard.displayDartThrown(this.current_throw);
 
 
       // => Is it double in and am I off => 
@@ -442,55 +466,63 @@ class DartsGame {
 
     this.current_throw.index = (this.current_throw.index%3)+1;
 
-    console.log( "* Throw "+ JSON.stringify(dartthrow) );
+    console.log( "* Throw "+ JSON.stringify(dart_thrown) );
   
     if( current_dart == 3 ) {
-  
+
       console.log("CURRENT DART IS 3 " + current_dart );
 
-      // - Who had the throw ?
-      var got_throw = window.thismatch.current_game.getGotThrow();
-      console.log( "* deduct from " + got_throw );
+      /*
+       * Update the team's score only after the last last has been thrown
+       */
   
-      // - what did they score ?
+      this.updateScore( );
 
-      var total = this.getTotal();
-      console.log( "** they got " + total );
-
-      // - what did they have to start with ?
-    
-      var remaining = document.getElementById(scoreboard).innerHTML;  
-      console.log( "*** remain " + remaining );
-
-      var newscore = remaining - this.getTotal();
-
-      document.getElementById(scoreboard).innerHTML = newscore;
 
       this.initNextThrow();
   
     }
   }
 
+  updateScore ( ) {
 
-  storeThrow( dartthrow ) {
+    this.debug("updateScore func()");
 
-    //console.log ( "StoreThrow() Params Object is  " + JSON.stringify(dartthrow)  );
-    //console.log ( "this.current_throw.scores.dart"+this.current_throw.index + " = " + JSON.stringify(dartthrow)  );
-    //console.log ( "this.current_throw.scores.dart"+this.current_throw.index );
+      // - Who had the throw , away or home ?
+    var got_throw = this.getGotThrow();
+    var scoreboard = got_throw+"score"; 
 
+      //var got_throw = window.thismatch.current_game.getGotThrow();
+  
+      // - what did they score ?
+
+      var total = this.getTotalThrown();
+
+      // - what did they have to start with ?
+    
+      var remaining = document.getElementById(scoreboard).innerHTML;  
+
+      this.debug( "* deduct from " + got_throw +  " * they got " + total  + " they did have "+  remaining + " remaining" );
+
+      var newscore = remaining - this.getTotalThrown();
+
+      document.getElementById(scoreboard).innerHTML = newscore;
+
+  }
+
+
+  storeThrow( dart_thrown ) {
+
+    this.debug("storeThrow func()");
     /*
      * Explain!
     */
-    eval ( "this.current_throw.scores.dart"+this.current_throw.index + " = " + JSON.stringify(dartthrow)  );
+    eval ( "this.current_throw.scores.dart"+this.current_throw.index + " = " + JSON.stringify(dart_thrown)  );
 
-    //console.log( "storedThrow " + dartthrow.number + " in "+ JSON.stringify(this.current_throw) );
   
     if( this.current_throw.index == 3 ) {
 
       /* Thrown 3rd dart => End of throw */
-
-      //console.log( "PUSH  " +  "this."+ this.got_throw + "team.scores.push(this.current_throw.scores )" );
-      //console.log( "pushed " + JSON.stringify(this.current_throw.scores) );
 
       /*
        * Explain!
@@ -500,11 +532,16 @@ class DartsGame {
       //eval( "this."+ this.got_throw +".scores.push(this.current_throw.scores)" );
       eval( "this."+ this.got_throw +"team.scores.push(this.current_throw.scores)" );
 
-      this.setTotal(); /* Sum 3 dart scores */
+      this.setTotalThrown(); /* Sum 3 dart scores */
     }
 
-    //this.current_throw.index = (this.current_throw.index%3)+1;
-    
+  }
+
+  debug(s) {
+
+    if(this.DEBUG) {
+      console.log("dartsgame.js dbg: " +s);
+    }
   }
 
 
